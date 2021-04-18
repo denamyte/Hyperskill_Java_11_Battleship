@@ -1,17 +1,17 @@
 package battleship;
 
-import java.util.Map;
-import java.util.Scanner;
+import java.util.*;
 
 public class BattleshipGame {
 
-    private static final Map<String, Integer> shipSizeMap = Map.of(
-            "Aircraft Carrier", 5,
-            "Battleship", 4,
-            "Submarine", 3,
-            "Cruiser", 3,
-            "Destroyer", 2
-    );
+    private static final Map<String, Integer> shipSizeMap = Collections.unmodifiableMap(
+            new LinkedHashMap<>() {{
+                put("Aircraft Carrier", 5);
+                put("Battleship", 4);
+                put("Submarine", 3);
+                put("Cruiser", 3);
+                put("Destroyer", 2);
+            }});
 
     enum PlaceShipResult {
         NO_ERROR, WRONG_LENGTH, WRONG_LOCATION, TOO_CLOSE
@@ -25,15 +25,13 @@ public class BattleshipGame {
 
     private static final String ENTER_PROMPT = "\nEnter the coordinates of the %s (%d cells):\n\n";
 
-    Scanner scanner = new Scanner(System.in);
-    private final BattleshipPlayer player;
-
     public BattleshipGame() {
-        player = new BattleshipPlayer();
-        System.out.println(player);
+        BattleshipPlayer player = new BattleshipPlayer();
+        inputShipsForPlayer(player);
     }
 
-    public void inputPlayerShips() {
+    public static void inputShipsForPlayer(BattleshipPlayer player) {
+        Scanner scanner = new Scanner(System.in);
         System.out.println(player);
         shipSizeMap.forEach((name, size) -> {
             PlaceShipResult result;
@@ -50,23 +48,20 @@ public class BattleshipGame {
         });
     }
 
-    private void tryPrintError(PlaceShipResult placeShipResult, String shipName) {
+    private static void tryPrintError(PlaceShipResult placeShipResult, String shipName) {
         String error = getShipPlacementError(placeShipResult, shipName);
         if (!error.isEmpty()) {
             System.out.println(error);
         }
     }
 
-    private String getShipPlacementError(PlaceShipResult placeShipResult, String shipName) {
-        String result;
+    private static String getShipPlacementError(PlaceShipResult placeShipResult, String shipName) {
         switch (placeShipResult) {
-            case WRONG_LENGTH: result = String.format(PLACE_SHIP_ERRORS.get(placeShipResult), shipName);
-                break;
+            case WRONG_LENGTH: return String.format(PLACE_SHIP_ERRORS.get(placeShipResult), shipName);
             case NO_ERROR:
             case WRONG_LOCATION:
             case TOO_CLOSE:
-            default: result = PLACE_SHIP_ERRORS.getOrDefault(placeShipResult, "");
+            default: return PLACE_SHIP_ERRORS.getOrDefault(placeShipResult, "");
         }
-        return result;
     }
 }
