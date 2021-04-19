@@ -450,6 +450,208 @@ files:
         }
     }
   learner_created: false
+- name: src/battleship/BattleshipPlayer.java
+  visible: true
+  text: |
+    package battleship;
+
+    import battleship.BattleshipGame.PlaceShipResult;
+
+    import java.util.Arrays;
+
+    public class BattleshipPlayer {
+        private static final String FOG = "~";
+        private static final String SHIP = "O";
+        private static final String HIT = "X";
+        private static final String MISS = "M";
+        private static final String UPPER_ROW = "  1 2 3 4 5 6 7 8 9 10\n";
+
+        private static final int SIZE = 10;
+
+        private String[][] data;
+
+        public BattleshipPlayer() {
+            setupData();
+        }
+
+        private void setupData() {
+            data = new String[SIZE][];
+            data[0] = new String[SIZE];
+            Arrays.fill(data[0], FOG);
+            for (int i = 1; i < SIZE; i++) {
+                data[i] = data[0].clone();
+            }
+        }
+
+        public String render() {
+            StringBuilder sb = new StringBuilder(UPPER_ROW);
+            char letter = 'A';
+            for (String[] row : data) {
+                sb.append(letter++).append(' ');
+                sb.append(String.join(" ", row));
+                sb.append('\n');
+            }
+            sb.setLength(sb.length() - 1);
+            return sb.toString();
+        }
+
+        public PlaceShipResult placeShip(int size, String rawCrd) {
+            final int[][] crd = parseCoordinates(rawCrd);
+            // Check if the coordinates are not 1 cell wide
+            if (crd[0][0] != crd[1][0] && crd[0][1] != crd[1][1]) {
+                return PlaceShipResult.WRONG_LOCATION;
+            }
+
+            sortCoordinates(crd);
+
+            // Check if the ship length is the same as it needs to be
+            if ((crd[1][0] - crd[0][0] + 1) * (crd[1][1] - crd[0][1] + 1) != size) {
+                return PlaceShipResult.WRONG_LENGTH;
+            }
+
+            // Check if the ship overlaps another one
+            if (shipOverlapsWithAnother(crd)) {
+                return PlaceShipResult.WRONG_LOCATION;
+            }
+
+            // Check if the ship is too close to another one
+            if (isShipTooCloseToAnother(crd)) {
+                return PlaceShipResult.TOO_CLOSE;
+            }
+
+            // At this point the ship is of needed size and should be located at the correct coordinates
+            placeSymbolToRange(SHIP, crd[0][0], crd[1][0], crd[0][1], crd[1][1]);
+            return PlaceShipResult.NO_ERROR;
+        }
+
+        /** Parse coordinates and return them in the following format: [[row1, col1], [row2, col2]] */
+        private int[][] parseCoordinates(String rawCrd) {
+            return Arrays.stream(rawCrd.split("\\s+"))
+                    .map(s -> new int[]{s.charAt(0) - 'A', Integer.parseInt(s.substring(1)) - 1})
+                    .toArray(int[][]::new);
+        }
+
+        /** Sort coordinates in ascending order */
+        private void sortCoordinates(int[][] crd) {
+            if (crd[0][0] > crd[1][0] || crd[0][1] > crd[1][1]) {
+                int[] tmp = crd[0];
+                crd[0] = crd[1];
+                crd[1] = tmp;
+            }
+        }
+
+        private boolean shipOverlapsWithAnother(int[][] crd) {
+            return symbolDetected(SHIP, crd[0][0], crd[1][0], crd[0][1], crd[1][1]);
+        }
+
+        private boolean isShipTooCloseToAnother(int[][] crd) {
+            int rowLo = stickCrdToRange(crd[0][0] - 1);
+            int rowHi = stickCrdToRange(crd[1][0] + 1);
+            int colLo = stickCrdToRange(crd[0][1] - 1);
+            int colHi = stickCrdToRange(crd[1][1] + 1);
+            return symbolDetected(SHIP, rowLo, rowHi, colLo, colHi);
+        }
+
+        private int stickCrdToRange(int i) {
+            return i < 0 ? 0 : i >= SIZE ? SIZE - 1 : i;
+        }
+
+        private boolean symbolDetected(String symbol, int rowLo, int rowHi, int colLo, int colHi) {
+            for (int y = rowLo; y <= rowHi; y++) {
+                for (int x = colLo; x <= colHi; x++) {
+                    if (symbol.equals(data[y][x])) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        private void placeSymbolToRange(String symbol, int rowLo, int rowHi, int colLo, int colHi) {
+            for (int y = rowLo; y <= rowHi; y++) {
+                for (int x = colLo; x <= colHi; x++) {
+                    data[y][x] = symbol;
+                }
+            }
+        }
+
+        @Override
+        public String toString() {
+            return render();
+        }
+    }
+  learner_created: true
+- name: src/battleship/BattleshipGame.java
+  visible: true
+  text: |
+    package battleship;
+
+    import java.util.*;
+
+    public class BattleshipGame {
+
+        private static final Map<String, Integer> shipSizeMap = Collections.unmodifiableMap(
+                new LinkedHashMap<>() {{
+                    put("Aircraft Carrier", 5);
+                    put("Battleship", 4);
+                    put("Submarine", 3);
+                    put("Cruiser", 3);
+                    put("Destroyer", 2);
+                }});
+
+        enum PlaceShipResult {
+            NO_ERROR, WRONG_LENGTH, WRONG_LOCATION, TOO_CLOSE
+        }
+
+        private static final Map<PlaceShipResult, String> PLACE_SHIP_ERRORS = Map.of(
+                PlaceShipResult.WRONG_LENGTH, "\nError! Wrong length of the %s! Try again:\n",
+                PlaceShipResult.WRONG_LOCATION, "\nError! Wrong ship location! Try again:\n",
+                PlaceShipResult.TOO_CLOSE, "\nError! You placed it too close to another one. Try again:\n"
+        );
+
+        private static final String ENTER_PROMPT = "\nEnter the coordinates of the %s (%d cells):\n\n";
+
+        public BattleshipGame() {
+            BattleshipPlayer player = new BattleshipPlayer();
+            inputShipsForPlayer(player);
+        }
+
+        public static void inputShipsForPlayer(BattleshipPlayer player) {
+            Scanner scanner = new Scanner(System.in);
+            System.out.println(player);
+            shipSizeMap.forEach((name, size) -> {
+                PlaceShipResult result;
+
+                System.out.printf(ENTER_PROMPT, name, size);
+
+                do {
+                    result = player.placeShip(size, scanner.nextLine());
+                    tryPrintError(result, name);
+                } while (!result.equals(PlaceShipResult.NO_ERROR));
+
+                System.out.println();
+                System.out.println(player);
+            });
+        }
+
+        private static void tryPrintError(PlaceShipResult placeShipResult, String shipName) {
+            String error = getShipPlacementError(placeShipResult, shipName);
+            if (!error.isEmpty()) {
+                System.out.println(error);
+            }
+        }
+
+        private static String getShipPlacementError(PlaceShipResult placeShipResult, String shipName) {
+            switch (placeShipResult) {
+                case WRONG_LENGTH: return String.format(PLACE_SHIP_ERRORS.get(placeShipResult), shipName);
+                case NO_ERROR:
+                case WRONG_LOCATION:
+                case TOO_CLOSE:
+                default: return PLACE_SHIP_ERRORS.getOrDefault(placeShipResult, "");
+            }
+        }
+    }
+  learner_created: true
 feedback_link: https://hyperskill.org/projects/125/stages/664/implement#comment
 status: Unchecked
 record: -1
