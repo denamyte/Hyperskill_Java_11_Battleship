@@ -28,6 +28,8 @@ public class BattleshipGame {
     public BattleshipGame() {
         BattleshipPlayer player = new BattleshipPlayer();
         inputShipsForPlayer(player);
+        System.out.println("\nThe game starts!\n");
+        System.out.println(player);
     }
 
     public static void inputShipsForPlayer(BattleshipPlayer player) {
@@ -40,7 +42,7 @@ public class BattleshipGame {
 
             do {
                 result = player.placeShip(size, scanner.nextLine());
-                tryPrintError(result, name);
+                tryPrintShipPlacementError(result, name);
             } while (!result.equals(PlaceShipResult.NO_ERROR));
 
             System.out.println();
@@ -48,7 +50,7 @@ public class BattleshipGame {
         });
     }
 
-    private static void tryPrintError(PlaceShipResult placeShipResult, String shipName) {
+    private static void tryPrintShipPlacementError(PlaceShipResult placeShipResult, String shipName) {
         String error = getShipPlacementError(placeShipResult, shipName);
         if (!error.isEmpty()) {
             System.out.println(error);
