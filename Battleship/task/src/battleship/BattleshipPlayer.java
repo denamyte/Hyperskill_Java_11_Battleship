@@ -1,10 +1,11 @@
 package battleship;
 
-import battleship.BattleshipGame.PlaceShipResult;
+import battleship.Utils.PlaceShipResult;
+import battleship.Utils.ShotResult;
 
 public class BattleshipPlayer {
-    private static final String UPPER_ROW = "  1 2 3 4 5 6 7 8 9 10\n";
 
+    private static final String UPPER_ROW = "  1 2 3 4 5 6 7 8 9 10\n";
 
     private final String[][] data;
 
@@ -48,6 +49,14 @@ public class BattleshipPlayer {
 
         Utils.placeShipIntoField(data, crd);
         return PlaceShipResult.NO_ERROR;
+    }
+
+    public ShotResult takeShot(String rawCrd) {
+        final int[] crd = Utils.parseShotCoordinates(rawCrd);
+        if (Utils.coordinatesNotInRange(crd)) {
+            return ShotResult.WRONG_COORDINATES;
+        }
+        return Utils.shoot(data, crd);
     }
 
     @Override
