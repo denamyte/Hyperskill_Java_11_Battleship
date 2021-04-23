@@ -8,12 +8,22 @@ public class BattleshipPlayer {
     private static final String UPPER_ROW = "  1 2 3 4 5 6 7 8 9 10\n";
 
     private final String[][] data;
+    private final String[][] rivalData;
 
     public BattleshipPlayer() {
         data = Utils.createInitialField();
+        rivalData = Utils.createInitialField();
     }
 
-    public String render() {
+    public String renderSelf() {
+        return render(data);
+    }
+
+    public String renderRival() {
+        return render(rivalData);
+    }
+
+    private static String render(String[][] data) {
         StringBuilder sb = new StringBuilder(UPPER_ROW);
         char letter = 'A';
         for (String[] row : data) {
@@ -51,16 +61,33 @@ public class BattleshipPlayer {
         return PlaceShipResult.NO_ERROR;
     }
 
-    public ShotResult takeShot(String rawCrd) {
+    public ShotResult shoot(BattleshipPlayer player, String rawCrd) {
+        final Shot shot = player.acceptShot(rawCrd);
+        Utils.markRivalData(rivalData, shot.result, shot.crd);
+        return shot.result;
+    }
+
+    public Shot acceptShot(String rawCrd) {
         final int[] crd = Utils.parseShotCoordinates(rawCrd);
         if (Utils.coordinatesNotInRange(crd)) {
-            return ShotResult.WRONG_COORDINATES;
+            return new Shot(ShotResult.WRONG_COORDINATES, crd);
         }
-        return Utils.shoot(data, crd);
+        return new Shot(Utils.shoot(data, crd), crd);
     }
 
     @Override
     public String toString() {
-        return render();
+        return renderSelf();
     }
+
+    public static class Shot {
+        public final ShotResult result;
+        public final int[] crd;
+
+        public Shot(ShotResult result, int[] crd) {
+            this.result = result;
+            this.crd = crd;
+        }
+    }
+
 }

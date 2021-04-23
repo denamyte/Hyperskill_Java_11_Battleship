@@ -34,10 +34,15 @@ public class Utils {
             PlaceShipResult.TOO_CLOSE, "\nError! You placed it too close to another one. Try again:\n"
     );
 
-    public static final Map<ShotResult, String> SHOT_RESULT_MAP = Map.of(
+    public static final Map<ShotResult, String> SHOT_MESSAGE_MAP = Map.of(
             ShotResult.HIT, "\nYou hit a ship!\n",
             ShotResult.MISSED, "\nYou missed!\n",
             ShotResult.WRONG_COORDINATES, "\nError! You entered the wrong coordinates! Try again:\n"
+    );
+
+    public static final Map<ShotResult, String> RIVAL_DATA_MARK_MAP = Map.of(
+            ShotResult.HIT, HIT,
+            ShotResult.MISSED, MISS
     );
 
     public static String[][] createInitialField() {
@@ -115,6 +120,13 @@ public class Utils {
             for (int x = colLo; x <= colHi; x++) {
                 data[y][x] = symbol;
             }
+        }
+    }
+
+    public static void markRivalData(final String rivalData[][], ShotResult result, int[] crd) {
+        final String mark = RIVAL_DATA_MARK_MAP.getOrDefault(result, "");
+        if (!mark.isEmpty()) {
+            rivalData[crd[0]][crd[1]] = mark;
         }
     }
 

@@ -6,7 +6,7 @@ import battleship.Utils.ShotResult;
 import java.util.*;
 
 import static battleship.Utils.PLACE_SHIP_RESULT_MAP;
-import static battleship.Utils.SHOT_RESULT_MAP;
+import static battleship.Utils.SHOT_MESSAGE_MAP;
 import static battleship.Utils.SHIP_NAME_TO_SIZE_MAP;
 
 public class BattleshipGame {
@@ -16,11 +16,12 @@ public class BattleshipGame {
     private static final String ENTER_PROMPT = "\nEnter the coordinates of the %s (%d cells):\n\n";
 
     public BattleshipGame() {
-        BattleshipPlayer player = new BattleshipPlayer();
-        inputShipsForPlayer(player);
+        BattleshipPlayer player1 = new BattleshipPlayer();
+        BattleshipPlayer player2 = new BattleshipPlayer();
+        inputShipsForPlayer(player1);
         System.out.println("\nThe game starts!\n");
-        System.out.println(player);
-        takeOneShot(player);
+        System.out.println(player2.renderRival());
+        takeOneShot(player1, player2);
     }
 
     private static void inputShipsForPlayer(BattleshipPlayer player) {
@@ -57,17 +58,21 @@ public class BattleshipGame {
         }
     }
 
-    private static void takeOneShot(BattleshipPlayer player) {
+    private static void takeOneShot(BattleshipPlayer shotPlayer, BattleshipPlayer shooterPlayer) {
         System.out.println("\nTake a shot!\n");
-        ShotResult result;
+        ShotResult shotResult;
 
         do {
-            result = player.takeShot(scanner.nextLine());
-            if (!result.equals(ShotResult.WRONG_COORDINATES)) {
-                System.out.println("\n" + player);
+            shotResult = shooterPlayer.shoot(shotPlayer, scanner.nextLine());
+            final String shotMsg = SHOT_MESSAGE_MAP.get(shotResult);
+            if (shotResult.equals(ShotResult.WRONG_COORDINATES)) {
+                System.out.println(shotMsg);
+            } else {
+                System.out.println("\n" + shooterPlayer.renderRival());
+                System.out.println(shotMsg);
+                System.out.println(shotPlayer);
             }
-            System.out.println(SHOT_RESULT_MAP.get(result));
 
-        } while (result.equals(ShotResult.WRONG_COORDINATES));
+        } while (shotResult.equals(ShotResult.WRONG_COORDINATES));
     }
 }
