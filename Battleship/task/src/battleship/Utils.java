@@ -13,10 +13,10 @@ public class Utils {
                 put("Destroyer", 2);
             }});
 
-    private static final String FOG = "~";
-    private static final String SHIP = "O";
-    private static final String HIT = "X";
-    private static final String MISS = "M";
+    public static final String FOG = "~";
+    public static final String SHIP = "O";
+    public static final String HIT = "X";
+    public static final String MISS = "M";
 
     private static final int SIZE = 10;
 
@@ -25,7 +25,7 @@ public class Utils {
     }
 
     public enum ShotResult {
-        HIT, MISSED, WRONG_COORDINATES
+        HIT, SANK, SANK_LAST, MISSED, WRONG_COORDINATES
     }
 
     public static final Map<PlaceShipResult, String> PLACE_SHIP_RESULT_MAP = Map.of(
@@ -35,13 +35,17 @@ public class Utils {
     );
 
     public static final Map<ShotResult, String> SHOT_MESSAGE_MAP = Map.of(
-            ShotResult.HIT, "\nYou hit a ship!\n",
-            ShotResult.MISSED, "\nYou missed!\n",
+            ShotResult.HIT, "\nYou hit a ship! Try again:\n",
+            ShotResult.MISSED, "\nYou missed. Try again:\n",
+            ShotResult.SANK, "\nYou sank a ship! Specify a new target:\n",
+            ShotResult.SANK_LAST, "\nYou sank the last ship. You won. Congratulations!",
             ShotResult.WRONG_COORDINATES, "\nError! You entered the wrong coordinates! Try again:\n"
     );
 
     public static final Map<ShotResult, String> RIVAL_DATA_MARK_MAP = Map.of(
             ShotResult.HIT, HIT,
+            ShotResult.SANK, HIT,
+            ShotResult.SANK_LAST, HIT,
             ShotResult.MISSED, MISS
     );
 
@@ -111,11 +115,11 @@ public class Utils {
         return false;
     }
 
-    public static void placeShipIntoField(final String data[][], int[][] crd) {
+    public static void placeShipIntoField(final String[][] data, int[][] crd) {
         placeSymbolToRange(data, SHIP, crd[0][0], crd[1][0], crd[0][1], crd[1][1]);
     }
 
-    public static void placeSymbolToRange(final String data[][], String symbol, int rowLo, int rowHi, int colLo, int colHi) {
+    public static void placeSymbolToRange(final String[][] data, String symbol, int rowLo, int rowHi, int colLo, int colHi) {
         for (int y = rowLo; y <= rowHi; y++) {
             for (int x = colLo; x <= colHi; x++) {
                 data[y][x] = symbol;
@@ -123,20 +127,17 @@ public class Utils {
         }
     }
 
-    public static void markRivalData(final String rivalData[][], ShotResult result, int[] crd) {
+    public static void markRivalData(final String[][] rivalData, ShotResult result, int[] crd) {
         final String mark = RIVAL_DATA_MARK_MAP.getOrDefault(result, "");
         if (!mark.isEmpty()) {
             rivalData[crd[0]][crd[1]] = mark;
         }
     }
 
-    public static ShotResult shoot(final String data[][], int[] crd) {
-        if (data[crd[0]][crd[1]].equals(SHIP)) {
-            data[crd[0]][crd[1]] = HIT;
-            return ShotResult.HIT;
-        }
-        data[crd[0]][crd[1]] = MISS;
-        return ShotResult.MISSED;
+    public static String shoot(final String[][] data, int[] crd) {
+        final String symbol = data[crd[0]][crd[1]];
+        data[crd[0]][crd[1]] = symbol.equals(SHIP) || symbol.equals(HIT) ? HIT : MISS;
+        return symbol;
     }
 
 }

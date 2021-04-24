@@ -3,16 +3,21 @@ package battleship;
 import battleship.Utils.PlaceShipResult;
 import battleship.Utils.ShotResult;
 
+import java.util.ArrayList;
+import java.util.Collection;
+
 public class BattleshipPlayer {
 
     private static final String UPPER_ROW = "  1 2 3 4 5 6 7 8 9 10\n";
 
     private final String[][] data;
     private final String[][] rivalData;
+    private final Collection<Ship> ships;
 
     public BattleshipPlayer() {
         data = Utils.createInitialField();
         rivalData = Utils.createInitialField();
+        ships = new ArrayList<>();
     }
 
     public String renderSelf() {
@@ -58,6 +63,8 @@ public class BattleshipPlayer {
         }
 
         Utils.placeShipIntoField(data, crd);
+        ships.add(new Ship(crd[0], crd[1]));
+
         return PlaceShipResult.NO_ERROR;
     }
 
@@ -72,7 +79,20 @@ public class BattleshipPlayer {
         if (Utils.coordinatesNotInRange(crd)) {
             return new Shot(ShotResult.WRONG_COORDINATES, crd);
         }
-        return new Shot(Utils.shoot(data, crd), crd);
+        switch (Utils.shoot(data, crd)) {
+            case Utils.HIT: return new Shot(ShotResult.HIT, crd);
+            case Utils.SHIP: return new Shot(hitShip(crd), crd);
+            default: return new Shot(ShotResult.MISSED, crd);
+        }
+    }
+
+    private ShotResult hitShip(int[] crd) {
+        final Ship shotShip = ships.stream().filter(ship -> ship.hit(crd)).findFirst().orElseThrow();
+        if (!shotShip.sunken()) {
+            return ShotResult.HIT;
+        }
+        ships.remove(shotShip);
+        return !ships.isEmpty() ? ShotResult.SANK : ShotResult.SANK_LAST;
     }
 
     @Override

@@ -5,9 +5,7 @@ import battleship.Utils.ShotResult;
 
 import java.util.*;
 
-import static battleship.Utils.PLACE_SHIP_RESULT_MAP;
-import static battleship.Utils.SHOT_MESSAGE_MAP;
-import static battleship.Utils.SHIP_NAME_TO_SIZE_MAP;
+import static battleship.Utils.*;
 
 public class BattleshipGame {
 
@@ -19,9 +17,12 @@ public class BattleshipGame {
         BattleshipPlayer player1 = new BattleshipPlayer();
         BattleshipPlayer player2 = new BattleshipPlayer();
         inputShipsForPlayer(player1);
+
         System.out.println("\nThe game starts!\n");
         System.out.println(player2.renderRival());
-        takeOneShot(player1, player2);
+        System.out.println("\nTake a shot!\n");
+
+        sinkAPlayer(player1, player2);
     }
 
     private static void inputShipsForPlayer(BattleshipPlayer player) {
@@ -58,8 +59,14 @@ public class BattleshipGame {
         }
     }
 
-    private static void takeOneShot(BattleshipPlayer shotPlayer, BattleshipPlayer shooterPlayer) {
-        System.out.println("\nTake a shot!\n");
+    private static void sinkAPlayer(BattleshipPlayer goner, BattleshipPlayer butcher) {
+        ShotResult shotResult = ShotResult.MISSED;
+        while (!shotResult.equals(ShotResult.SANK_LAST)) {
+            shotResult = takeOneShot(goner, butcher);
+        }
+    }
+
+    private static ShotResult takeOneShot(BattleshipPlayer shotPlayer, BattleshipPlayer shooterPlayer) {
         ShotResult shotResult;
 
         do {
@@ -70,9 +77,10 @@ public class BattleshipGame {
             } else {
                 System.out.println("\n" + shooterPlayer.renderRival());
                 System.out.println(shotMsg);
-                System.out.println(shotPlayer);
             }
 
         } while (shotResult.equals(ShotResult.WRONG_COORDINATES));
+
+        return shotResult;
     }
 }
