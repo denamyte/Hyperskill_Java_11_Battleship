@@ -4,6 +4,7 @@ import battleship.Utils.PlaceShipResult;
 import battleship.Utils.ShotResult;
 
 import java.util.*;
+import java.util.stream.Stream;
 
 import static battleship.Utils.*;
 
@@ -11,21 +12,30 @@ public class BattleshipGame {
 
     private static final Scanner scanner = new Scanner(System.in);
 
+    private static final String PLACE_SHIP_PROMPT = "%s, place your ships on the game field\n\n";
     private static final String ENTER_PROMPT = "\nEnter the coordinates of the %s (%d cells):\n\n";
+    private static final String PASS_MOVE_PROMPT = "\nPress Enter and pass the move to another player\n...";
+    private static final String TURN_PROMPT = "\n%s, it's your turn:\n\n";
 
-    public BattleshipGame() {
-        BattleshipPlayer player1 = new BattleshipPlayer();
-        BattleshipPlayer player2 = new BattleshipPlayer();
-        inputShipsForPlayer(player1);
+    public void play() {
+        var players = new BattleshipPlayer[]{
+                new BattleshipPlayer("Player 1"),
+                new BattleshipPlayer("Player 2")
+        };
+        Arrays.stream(players).forEach(BattleshipGame::inputShipsForPlayer);
 
-        System.out.println("\nThe game starts!\n");
-        System.out.println(player2.renderRival());
-        System.out.println("\nTake a shot!\n");
+        ShotResult shotResult = null;
+        int firstIndex = 0;
+        while (!ShotResult.SANK_LAST.equals(shotResult)) {
+            var p1 = players[firstIndex];
+            var p2 = players[firstIndex = (firstIndex + 1) % 2];
 
-        sinkAPlayer(player1, player2);
+            shotResult = takeOneShot(p1, p2);
+        }
     }
 
     private static void inputShipsForPlayer(BattleshipPlayer player) {
+        System.out.printf(PLACE_SHIP_PROMPT, player.name);
         System.out.println(player);
         SHIP_NAME_TO_SIZE_MAP.forEach((name, size) -> {
             PlaceShipResult result;
@@ -40,6 +50,8 @@ public class BattleshipGame {
             System.out.println();
             System.out.println(player);
         });
+
+        passMovePrompt();
     }
 
     private static void tryPrintShipPlacementError(PlaceShipResult placeShipResult, String shipName) {
@@ -59,28 +71,30 @@ public class BattleshipGame {
         }
     }
 
-    private static void sinkAPlayer(BattleshipPlayer goner, BattleshipPlayer butcher) {
-        ShotResult shotResult = ShotResult.MISSED;
-        while (!shotResult.equals(ShotResult.SANK_LAST)) {
-            shotResult = takeOneShot(goner, butcher);
-        }
-    }
-
-    private static ShotResult takeOneShot(BattleshipPlayer shotPlayer, BattleshipPlayer shooterPlayer) {
+    private static ShotResult takeOneShot(BattleshipPlayer shooter, BattleshipPlayer target) {
         ShotResult shotResult;
-
         do {
-            shotResult = shooterPlayer.shoot(shotPlayer, scanner.nextLine());
-            final String shotMsg = SHOT_MESSAGE_MAP.get(shotResult);
-            if (shotResult.equals(ShotResult.WRONG_COORDINATES)) {
-                System.out.println(shotMsg);
-            } else {
-                System.out.println("\n" + shooterPlayer.renderRival());
-                System.out.println(shotMsg);
+            System.out.println(shooter.renderBoth());
+            System.out.printf(TURN_PROMPT, shooter.name);
+
+            shotResult = shooter.shoot(target, scanner.nextLine());
+
+            System.out.println(SHOT_MESSAGE_MAP.get(shotResult));
+            if (canPassMove(shotResult)) {
+                passMovePrompt();
             }
 
         } while (shotResult.equals(ShotResult.WRONG_COORDINATES));
 
         return shotResult;
+    }
+
+    private static boolean canPassMove(ShotResult shotResult) {
+        return Stream.of(ShotResult.WRONG_COORDINATES, ShotResult.SANK_LAST).noneMatch(shotResult::equals);
+    }
+
+    private static void passMovePrompt() {
+        System.out.println(PASS_MOVE_PROMPT);
+        scanner.nextLine();
     }
 }

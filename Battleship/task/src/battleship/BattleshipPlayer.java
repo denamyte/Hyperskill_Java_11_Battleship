@@ -9,12 +9,15 @@ import java.util.Collection;
 public class BattleshipPlayer {
 
     private static final String UPPER_ROW = "  1 2 3 4 5 6 7 8 9 10\n";
+    private static final String LINE = "\n---------------------\n";
 
+    public final String name;
     private final String[][] data;
     private final String[][] rivalData;
     private final Collection<Ship> ships;
 
-    public BattleshipPlayer() {
+    public BattleshipPlayer(String name) {
+        this.name = name;
         data = Utils.createInitialField();
         rivalData = Utils.createInitialField();
         ships = new ArrayList<>();
@@ -26,6 +29,10 @@ public class BattleshipPlayer {
 
     public String renderRival() {
         return render(rivalData);
+    }
+
+    public String renderBoth() {
+        return renderRival() + LINE + renderSelf();
     }
 
     private static String render(String[][] data) {

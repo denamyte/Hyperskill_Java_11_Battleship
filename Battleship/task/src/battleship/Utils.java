@@ -35,9 +35,9 @@ public class Utils {
     );
 
     public static final Map<ShotResult, String> SHOT_MESSAGE_MAP = Map.of(
-            ShotResult.HIT, "\nYou hit a ship! Try again:\n",
-            ShotResult.MISSED, "\nYou missed. Try again:\n",
-            ShotResult.SANK, "\nYou sank a ship! Specify a new target:\n",
+            ShotResult.HIT, "\nYou hit a ship!",
+            ShotResult.MISSED, "\nYou missed",
+            ShotResult.SANK, "\nYou sank a ship!",
             ShotResult.SANK_LAST, "\nYou sank the last ship. You won. Congratulations!",
             ShotResult.WRONG_COORDINATES, "\nError! You entered the wrong coordinates! Try again:\n"
     );
